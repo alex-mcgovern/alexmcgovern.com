@@ -12,6 +12,8 @@
     "deploy": "npm run pages:build && wrangler pages deploy .vercel/output/static"
   },
   "dependencies": {
+    "@vanilla-extract/next-plugin": "2.3.6",
+    "boondoggle": "1.0.0-117",
     "next": "14.1.0",
     "react": "^18",
     "react-dom": "^18"
@@ -25,6 +27,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.1.0",
     "eslint-plugin-next-on-pages": "^1.9.0",
+    "prettier": "3.2.5",
     "typescript": "^5",
     "vercel": "^33.5.3",
     "wrangler": "^3.30.1"
