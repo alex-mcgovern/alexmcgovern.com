@@ -1,5 +1,6 @@
 import { setupDevPlatform } from "@cloudflare/next-on-pages/next-dev";
 import { createVanillaExtractPlugin } from "@vanilla-extract/next-plugin";
+import "./env.mjs";
 
 const withVanillaExtract = createVanillaExtractPlugin({
     identifiers: "short",
