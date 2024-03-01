@@ -13,6 +13,9 @@ export const repoCardCSS = style([
         textDecoration: "none",
         transition: "short",
     }),
+]);
+
+export const repoCardLinkCSS = style([
     {
         selectors: {
             "&:hover": {
