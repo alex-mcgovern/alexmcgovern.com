@@ -9,42 +9,12 @@ import { type components as GithubOpenApiComponents } from "@octokit/openapi-typ
 import { repoCardCSS, repoCardLinkCSS } from "./styles.css";
 import { formatDistance } from "date-fns";
 import clsx from "clsx";
-import { Loader } from "boondoggle/loader";
 import { Suspense } from "react";
 import { Skeleton } from "boondoggle/skeleton";
 
 type Repo = GithubOpenApiComponents["schemas"]["repository"];
-type Commit = GithubOpenApiComponents["schemas"]["commit"];
-
-const PER_PAGE = 100;
-
-const fetchCommits = async (
-    repo: Repo,
-    page: number = 1,
-    allCommits: Commit[] = [],
-): Promise<any[]> => {
-    const commits = await octokit.request("GET /repos/{owner}/{repo}/commits", {
-        owner: env.NEXT_PUBLIC_GITHUB_USERNAME,
-        repo: repo.name,
-        page: page,
-        per_page: PER_PAGE,
-        headers: {
-            "X-GitHub-Api-Version": "2022-11-28",
-        },
-    });
-    allCommits = [...allCommits, ...commits.data];
-
-    // If the length of commits is equal to PER_PAGE, there might be more commits
-    if (commits.data.length === PER_PAGE) {
-        return fetchCommits(repo, page + 1, allCommits);
-    }
-
-    return allCommits;
-};
 
 const RepoCard = async ({ repo }: { repo: Repo }) => {
-    const commits = await fetchCommits(repo);
-
     return (
         <a
             href={repo.html_url}
@@ -97,16 +67,6 @@ const RepoCard = async ({ repo }: { repo: Repo }) => {
                 {repo.language ? (
                     <>
                         <div>{repo.language}</div>
-                        <div>•</div>
-                    </>
-                ) : null}
-
-                {commits ? (
-                    <>
-                        <div>
-                            {commits.length}{" "}
-                            {commits.length > 1 ? "commits" : "commit"}
-                        </div>
                         <div>•</div>
                     </>
                 ) : null}
