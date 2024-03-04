@@ -1,6 +1,10 @@
 import { setupDevPlatform } from "@cloudflare/next-on-pages/next-dev";
 import { createVanillaExtractPlugin } from "@vanilla-extract/next-plugin";
 import "./env.mjs";
+import createWithMdx from "@next/mdx";
+import { withContentlayer } from "next-contentlayer";
+
+const withMdx = createWithMdx();
 
 const withVanillaExtract = createVanillaExtractPlugin({
     identifiers: "short",
@@ -15,6 +19,8 @@ if (process.env.NODE_ENV === "development") {
 }
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+    pageExtensions: ["mdx", "ts", "tsx"],
+};
 
-export default withVanillaExtract(nextConfig);
+export default withContentlayer(withVanillaExtract(withMdx(nextConfig)));

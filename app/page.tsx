@@ -1,164 +1,20 @@
 import { Main } from "boondoggle/main";
 import { Box } from "boondoggle/box";
 import { css } from "boondoggle/css";
-import { Icon } from "boondoggle/icon";
 import { env } from "@/env.mjs";
 import { Octokit } from "@octokit/core";
-import { faCodeFork } from "@fortawesome/pro-solid-svg-icons/faCodeFork";
-import { type components as GithubOpenApiComponents } from "@octokit/openapi-types";
-import { repoCardCSS, repoCardLinkCSS } from "./styles.css";
-import { formatDistance } from "date-fns";
-import clsx from "clsx";
 import { Suspense } from "react";
-import { Skeleton } from "boondoggle/skeleton";
+import { LoadingCard, Repo, RepoCard } from "@/lib/repo/index";
+import { BlogCard } from "@/lib/blog";
 
-type Repo = GithubOpenApiComponents["schemas"]["repository"];
-
-const RepoCard = async ({ repo }: { repo: Repo }) => {
-    return (
-        <a
-            href={repo.html_url}
-            className={clsx(repoCardCSS, repoCardLinkCSS)}
-        >
-            <div
-                className={css({
-                    padding: "space_4",
-                })}
-            >
-                <Box
-                    className={css({
-                        alignItems: "center",
-                        display: "flex",
-                        gap: "space_1",
-                        fontStyle: "bodyMd",
-                    })}
-                >
-                    <h3
-                        className={css({
-                            fontStyle: "bodyMd",
-                        })}
-                    >
-                        {repo.name}
-                    </h3>
-                </Box>
-                <p
-                    className={css({
-                        fontStyle: "bodySm",
-                    })}
-                >
-                    {repo.description}
-                </p>
-            </div>
-
-            {/* Card footer */}
-
-            <Box
-                className={css({
-                    borderTop: "border_rule",
-                    color: "text_low_contrast",
-                    fontStyle: "bodySm",
-                    padding: "space_4",
-                    marginTop: "auto",
-                    alignItems: "center",
-                    display: "flex",
-                    gap: "space_1",
-                })}
-            >
-                {repo.language ? (
-                    <>
-                        <div>{repo.language}</div>
-                        <div>•</div>
-                    </>
-                ) : null}
-
-                {repo.created_at ? (
-                    <div>
-                        Created{" "}
-                        {formatDistance(new Date(repo.created_at), new Date(), {
-                            addSuffix: true,
-                        })}
-                    </div>
-                ) : null}
-
-                {repo.fork === true ? (
-                    <Icon
-                        className={css({
-                            color: "text_low_contrast",
-                            marginLeft: "auto",
-                        })}
-                        icon={faCodeFork}
-                    />
-                ) : null}
-            </Box>
-        </a>
-    );
-};
-
-const LoadingCard = () => {
-    return (
-        <div className={clsx(repoCardCSS)}>
-            <div
-                className={css({
-                    padding: "space_4",
-                })}
-            >
-                <Skeleton
-                    marginBottom="space_3"
-                    height="space_4"
-                    width="50%"
-                />
-                <Skeleton
-                    marginBottom="space_1"
-                    height="space_3"
-                />
-                <Skeleton
-                    marginBottom="space_1"
-                    height="space_3"
-                />
-                <Skeleton
-                    marginBottom="space_1"
-                    height="space_3"
-                    __width="30%"
-                />
-            </div>
-
-            <Box
-                className={css({
-                    borderTop: "border_rule",
-                    color: "text_low_contrast",
-                    fontStyle: "bodySm",
-                    padding: "space_4",
-                    marginTop: "auto",
-                    alignItems: "center",
-                    display: "flex",
-                    gap: "space_1",
-                })}
-            >
-                <Skeleton
-                    height="space_3"
-                    __width="20%"
-                />
-                <div>•</div>
-                <Skeleton
-                    height="space_3"
-                    __width="20%"
-                />{" "}
-                <div>•</div>
-                <Skeleton
-                    height="space_3"
-                    __width="20%"
-                />
-            </Box>
-        </div>
-    );
-};
+export const runtime = "edge";
 
 const octokit = new Octokit({
     auth: env.GITHUB_PAT,
 });
 
 export default async function Page() {
-    const data = await octokit.request("GET /users/{username}/repos", {
+    const repos = await octokit.request("GET /users/{username}/repos", {
         username: env.NEXT_PUBLIC_GITHUB_USERNAME,
         headers: {
             "X-GitHub-Api-Version": "2022-11-28",
@@ -167,14 +23,20 @@ export default async function Page() {
         type: "all",
     });
 
+    const blogPosts = await octokit.request(
+        "GET /repos/{owner}/{repo}/contents/{path}",
+        {
+            owner: env.NEXT_PUBLIC_GITHUB_USERNAME,
+            repo: "blog-posts",
+            path: "md",
+            headers: {
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+        },
+    );
+
     return (
-        <Main
-            size="md"
-            className={css({
-                marginX: "auto",
-                paddingY: "space_8",
-            })}
-        >
+        <>
             <h1 className={css({ fontStyle: "h3" })}>Alex McGovern</h1>
             <h2 className={css({ fontStyle: "bodyMd", fontWeight: "normal" })}>
                 {"Coder / software engineer based in London."}
@@ -197,6 +59,38 @@ export default async function Page() {
 
             <hr />
 
+            <h3 className={css({ fontStyle: "h5" })}>Blog posts</h3>
+
+            <Box
+                display="grid"
+                gridTemplateColumns={{
+                    desktop: "3x",
+                    tablet: "2x",
+                    mobile: "1x",
+                }}
+                gap="space_2"
+            >
+                {Array.isArray(blogPosts.data) &&
+                    blogPosts.data.every((blog) => blog.type === "file") &&
+                    blogPosts.data.map((blog) => (
+                        <Suspense
+                            key={blog.name}
+                            fallback={<LoadingCard key={blog.name} />}
+                        >
+                            <a href={`blog/${blog.name}`}>
+                                <div>{blog.name}</div>
+                                <div>{blog.download_url}</div>
+                            </a>
+                            {/* <BlogCard
+                                repo={blog as Repo}
+                                key={blog.id}
+                            /> */}
+                        </Suspense>
+                    ))}
+            </Box>
+
+            <hr />
+
             <h3 className={css({ fontStyle: "h5" })}>Github repos</h3>
             <p>{"See what I've been working on."}</p>
 
@@ -209,7 +103,7 @@ export default async function Page() {
                 }}
                 gap="space_2"
             >
-                {data.data.map((repo) => (
+                {repos.data.map((repo) => (
                     <Suspense
                         key={repo.id}
                         fallback={<LoadingCard key={repo.id} />}
@@ -221,6 +115,6 @@ export default async function Page() {
                     </Suspense>
                 ))}
             </Box>
-        </Main>
+        </>
     );
 }

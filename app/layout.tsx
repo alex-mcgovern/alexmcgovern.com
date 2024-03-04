@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "@fortawesome/fontawesome-svg-core/styles.css";
-
-export const runtime = "edge";
+import { Main } from "boondoggle/main";
+import { css } from "boondoggle/css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +18,17 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={inter.className}>{children}</body>
+            <body className={inter.className}>
+                <Main
+                    size="md"
+                    className={css({
+                        marginX: "auto",
+                        paddingY: "space_8",
+                    })}
+                >
+                    {children}
+                </Main>
+            </body>
         </html>
     );
 }
